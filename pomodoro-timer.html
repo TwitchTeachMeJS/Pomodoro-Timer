@@ -1,0 +1,373 @@
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>pomodoro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inconsolata:wght@600&family=Lalezar&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --color-base: #FCF8E8;
+      --color-primary: #94B49F;
+      --color-second: #ECB390;
+      --color-accent: #DF7861;
+    }
+
+    html {
+      font-size: 32vmin;
+    }
+
+    body {
+      align-items: center;
+      background-color: black;
+      color: var(--color-base);
+      display: flex;
+      font-family: Verdana, Geneva, Tahoma, sans-serif;
+      justify-content: center;
+      margin: 0px auto;
+      overflow: hidden;
+      text-align: center;
+    }
+
+    #timer-label-value {
+      font-size: 0.9rem;
+      margin-top: 0.1rem;
+      letter-spacing: -1vw;
+      line-height: 0.7;
+    }
+
+    .timer {
+      height: 3rem;
+      position: relative;
+      width: 3rem;
+    }
+
+    .timer-group {
+      fill: none;
+      stroke: none;
+    }
+
+    .timer-circle-red {
+      stroke: var(--color-accent);
+    }
+
+    .timer-circle-green {
+      stroke: var(--color-primary);
+    }
+
+    .timer-label {
+      align-items: center;
+      color: black;
+      display: flex;
+      height: 3rem;
+      justify-content: center;
+      position: absolute;
+      top: 0;
+      width: 3rem;
+    }
+
+    .timer-circle-background {
+      fill: rgba(91, 35, 182, 0.7);
+    }
+
+    .timer-circle-outer {
+      stroke: var(--color-base);
+      stroke-linecap: round;
+      stroke-width: 4;
+      transition: 0.5s linear all;
+    }
+
+    .timer-svg {
+      transform: rotate(-90deg);
+      transform-origin: center;
+    }
+
+    .buttons {
+      align-items: center;
+      display: flex;
+      height: 3rem;
+      justify-content: center;
+      position: absolute;
+      top: -25%;
+      width: 3rem;
+    }
+
+    /* button {
+      width: 60px;
+      height: 60px;
+      border: none;
+    } */
+
+    #play-btn {
+      background-image: url("play-alt-svgrepo-com.svg");
+      /* Add an image of a play button */
+      background-size: 50px 50px;
+      background-repeat: no-repeat;
+      background-position: center;
+      background-color: transparent;
+      width: 60px;
+      height: 60px;
+      border: none;
+      z-index: 1;
+    }
+
+    #pause-btn {
+      background-image: url("pause-alt-svgrepo-com.svg");
+      /* Add an image of a pause button */
+      background-size: 50px 50px;
+      background-repeat: no-repeat;
+      background-position: center;
+      background-color: transparent;
+      width: 60px;
+      height: 60px;
+      border: none;
+      z-index: 1;
+    }
+
+    #stop-btn {
+      background-image: url("stop-svgrepo-com.svg");
+      /* Add an image of a stop button */
+      background-size: 50px 50px;
+      background-repeat: no-repeat;
+      background-position: center;
+      background-color: transparent;
+      width: 60px;
+      height: 60px;
+      border: none;
+      z-index: 1;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="timer">
+    <svg class="timer-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <g class="timer-group">
+        <circle cx="50" cy="50" r="47" class="timer-circle-background" />
+        <circle cx="50" cy="50" r="45" class="timer-circle-outer" id="timer-circle-outer" stroke-dasharray="283" />
+        <circle cx="50" cy="50" r="40" class="timer-circle-red" />
+        <circle cx="50" cy="50" r="40" class="timer-circle-green" stroke-dasharray="209" />
+      </g>
+    </svg>
+    <div class="buttons">
+      <button id="play-btn"></button>
+      <button id="pause-btn"></button>
+      <button id="stop-btn"></button>
+    </div>
+    <div class="timer-label">
+      <div id="timer-label-value"></div>
+    </div>
+  </div>
+
+  <script type="text/javascript">
+    function zeroPadding(number, length) {
+      return (Array(length).join("0") + number).slice(-length);
+    }
+
+    function calculateRemainingPathDashArray(parameters) {
+      const date = new Date();
+      const minutes = date.getMinutes();
+      const interval = parameters.work + parameters.break;
+      const minutesInInterval = minutes % interval;
+      return `${283 * minutesInInterval / interval} 283`;
+    }
+
+    function calculateSessionText(parameters) {
+      const date = new Date();
+      const minutes = date.getMinutes();
+      const interval = parameters.work + parameters.break;
+      const minutesInInterval = minutes % interval;
+      const sessionNumber = (date.getHours() - 5) % 24;
+      if (minutesInInterval < parameters.work) {
+        return `POMODORO#${sessionNumber}`;
+      } else {
+        return `BREAK#${sessionNumber}`;
+      }
+    }
+
+    function calculateTimerClassName(parameters) {
+      const date = new Date();
+      const minutes = date.getMinutes();
+      const interval = parameters.work + parameters.break;
+      const minutesInInterval = minutes % interval;
+      return minutesInInterval < parameters.work ? "work" : "break";
+    }
+
+    function calculateTimerText(parameters, remainingTime) {
+      const remainingMinutes = Math.floor(remainingTime / 60);
+      const remainingSeconds = remainingTime % 60;
+      return [
+        zeroPadding(remainingMinutes, 2),
+        zeroPadding(remainingSeconds, 2),
+      ].join(":");
+    }
+
+    function getParameters() {
+      return {
+        break: 5,
+        work: 25,
+      };
+    }
+
+    setInterval(function () {
+      const parameters = getParameters();
+      const timerElement = document.getElementById("timer-label-value");
+      const remainingTime = timerElement.dataset.remainingTime;
+      timerElement.textContent = calculateTimerText(parameters, remainingTime);
+      timerElement.className = calculateTimerClassName(parameters);
+
+      const remainingPathElement = document.getElementById("timer-circle-outer");
+      remainingPathElement.setAttribute(
+        "stroke-dasharray",
+        calculateRemainingPathDashArray(parameters)
+      );
+    }, 1000);
+  </script>
+
+  <script>
+
+    // Set up the timer variables
+    let workTimer;
+    let breakTimer;
+
+
+    // Function to start the work timer
+    function startWorkTimer() {
+      workTimer = setInterval(() => {
+        // Do work timer logic here
+        console.log("Work timer started.");
+      }, 1000);
+    }
+
+    // Function to start the break timer
+    function startBreakTimer() {
+      breakTimer = setInterval(() => {
+        // Do break timer logic here
+        console.log("Break timer started.");
+      }, 1000);
+    }
+
+    // Function to stop all timers
+    function stopAllTimers() {
+      clearInterval(workTimer);
+      clearInterval(breakTimer);
+      console.log("All timers stopped.");
+    }
+
+    // Attach event listeners to buttons
+    document.getElementById("play-btn").addEventListener("click", startWorkTimer);
+    document.getElementById("pause-btn").addEventListener("click", startBreakTimer);
+    document.getElementById("stop-btn").addEventListener("click", stopAllTimers);
+
+  </script>
+
+  <script>
+    const WORK_TIME = 25 * 60; // 25 minutes in seconds
+    const BREAK_TIME = 5 * 60; // 5 minutes in seconds
+
+    const parameters = {
+      work: 25,
+      break: 5
+    };
+
+    let remainingSeconds = parameters.work * 60;
+
+    function updateTimer() {
+      const remainingMinutes = Math.floor(remainingSeconds / 60);
+      const remainingSecondsDisplay = remainingSeconds % 60;
+      updateTimerLabel(remainingMinutes, remainingSecondsDisplay);
+      const remainingPathDashArray = calculateRemainingPathDashArray(parameters, remainingSeconds);
+      document.getElementById("timer-circle-outer").setAttribute("stroke-dasharray", remainingPathDashArray);
+      if (remainingSeconds === 0) {
+        clearInterval(timerInterval);
+      } else {
+        remainingSeconds -= 1;
+      }
+    }
+
+    const timerInterval = setInterval(updateTimer, 1000);
+
+    let timerIntervalId;
+    let remainingTime = WORK_TIME;
+
+    let timeLeft = 60;
+
+    const timerCircleOuter = document.getElementById('timer-circle-outer');
+    const timerLabel = document.getElementById('timer-label');
+    const playBtn = document.getElementById('play-btn');
+    const pauseBtn = document.getElementById('pause-btn');
+    const stopBtn = document.getElementById('stop-btn');
+    const timerDisplay = document.getElementById('timer-label-value');
+
+
+    playBtn.addEventListener('click', startTimer.bind(null, WORK_TIME));
+    pauseBtn.addEventListener('click', startTimer.bind(null, BREAK_TIME));
+    stopBtn.addEventListener('click', stopTimer);
+
+    function startTimer(duration) {
+      timeLeft = 60;
+      clearInterval(timerIntervalId);
+      remainingTime = duration;
+      updateTimerDisplay();
+      timerIntervalId = setInterval(updateTimer, 1000);
+      playBtn.disabled = true;
+      pauseBtn.disabled = false;
+      stopBtn.disabled = false;
+    }
+
+    function stopTimer() {
+      clearInterval(timerIntervalId);
+      remainingTime = WORK_TIME;
+      updateTimerDisplay();
+      playBtn.disabled = false;
+      pauseBtn.disabled = true;
+      stopBtn.disabled = true;
+    }
+
+    function updateTimer() {
+      remainingTime--;
+      if (remainingTime <= 0) {
+        stopTimer();
+        if (timerIntervalId === undefined) {
+          // The timer was stopped, so we are on a break
+          startTimer(BREAK_TIME);
+        } else {
+          // The work timer completed
+          alert('Time is up!');
+        }
+      }
+      updateTimerDisplay();
+    }
+
+    function updateTimerDisplay() {
+      const minutes = Math.floor(remainingTime / 60);
+      const seconds = remainingTime % 60;
+      const minutesStr = minutes.toString().padStart(2, '0');
+      const secondsStr = seconds.toString().padStart(2, '0');
+      timerLabel.textContent = `${minutesStr}:${secondsStr}`;
+      const progress = (remainingTime / (remainingTime === WORK_TIME ? WORK_TIME : BREAK_TIME)) * 100;
+      timerCircleOuter.style.strokeDashoffset = (283 * progress) / 100;
+    }
+
+    function updateTimerLabel(minutes, seconds) {
+      const formattedMinutes = zeroPadding(minutes, 2);
+      const formattedSeconds = zeroPadding(seconds, 2);
+      document.getElementById("timer-label-value").innerHTML = `${formattedMinutes}:${formattedSeconds}`;
+    }
+
+  </script>
+
+  <script>
+    function updateTimerDisplay() {
+      console.log('updating timer display');
+      const minutes = Math.floor(timeLeft / 60);
+      const seconds = timeLeft % 60;
+      timerDisplay.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+    }
+  </script>
+
+</body>
+
+</html>
