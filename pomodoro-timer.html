@@ -157,23 +157,66 @@
       <button id="stop-btn"></button>
     </div>
     <div class="timer-label">
-      <div id="timer-label-value"></div>
+      <div id="timer-label-value" work-time="25" break-time="1" ></div>
     </div>
   </div>
 
   <script type="text/javascript">
+    // I tried to keep as much of the real code as possible
+    let paused = false;
+    let remainingTime = 0;
+    
+    const availableTimers = ['work', 'break'];
+    let currentTimer = 'work';
+
+
+    function mapRange(value, start_start, start_end, end_start, end_end) {
+        return end_start + ((end_end - end_start) / (start_end - start_start)) * (value - start_start);
+    }
+    let startTime = Date.now();
+    function updateTime() {
+        if (paused) return;
+        const now = Date.now();
+        const diff = now - startTime;
+        let params = getParameters();
+        
+        // Deterime which time are we looking at
+        let timeRemaining = 0;
+        if (currentTimer == 'work') {
+            timeRemaining = params.work * 60 - diff * 0.001;
+            if (timeRemaining < 0) timeRemaining = 0;
+            else timeRemaining += 1;
+        } else if (currentTimer == 'break') {
+            timeRemaining = params.break * 60 - diff * 0.001;
+            if (timeRemaining < 0) timeRemaining = 0;
+            else timeRemaining += 1;
+        }
+
+        // The +1 is to just display the "25:00" so it doesn't immediately start at 24:59
+        remainingTime = parseInt(timeRemaining);
+    }
+
+    // Add leading 0's
     function zeroPadding(number, length) {
       return (Array(length).join("0") + number).slice(-length);
     }
 
+    // Calculate the path remaining
     function calculateRemainingPathDashArray(parameters) {
-      const date = new Date();
-      const minutes = date.getMinutes();
-      const interval = parameters.work + parameters.break;
-      const minutesInInterval = minutes % interval;
-      return `${283 * minutesInInterval / interval} 283`;
+
+        let timerFull = getParameters()[currentTimer]
+        timerFull *= 60;
+        console.log(remainingTime);
+
+        let perc = mapRange(remainingTime, timerFull, 0, 0, 283);
+
+        console.log(perc); 
+        return `${perc} 283`;
     }
 
+    // We will not be using this considering it's trying to get from a global time
+    // Shows what break session we are at, or if working shows the working time
+    /*
     function calculateSessionText(parameters) {
       const date = new Date();
       const minutes = date.getMinutes();
@@ -186,7 +229,9 @@
         return `BREAK#${sessionNumber}`;
       }
     }
+    */
 
+    // Show if it's the time for a break or for a work
     function calculateTimerClassName(parameters) {
       const date = new Date();
       const minutes = date.getMinutes();
@@ -205,16 +250,20 @@
     }
 
     function getParameters() {
-      return {
-        break: 5,
-        work: 25,
-      };
+        const mainElement = document.getElementById('timer-label-value');
+
+        const workMinutes = mainElement.getAttribute('work-time') == null ? 25 : parseFloat(mainElement.getAttribute('work-time'));
+        const breakMinutes = mainElement.getAttribute('work-time') == null ? 25 : parseFloat(mainElement.getAttribute('break-time'));
+        return {
+            break: breakMinutes,
+            work: workMinutes,
+        }
     }
 
     setInterval(function () {
+      updateTime();
       const parameters = getParameters();
       const timerElement = document.getElementById("timer-label-value");
-      const remainingTime = timerElement.dataset.remainingTime;
       timerElement.textContent = calculateTimerText(parameters, remainingTime);
       timerElement.className = calculateTimerClassName(parameters);
 
@@ -223,11 +272,26 @@
         "stroke-dasharray",
         calculateRemainingPathDashArray(parameters)
       );
-    }, 1000);
+    }, 200);
+
+    document.getElementById("play-btn").addEventListener("click", () => {
+        currentTimer = 'work';
+        startTime = Date.now();
+        paused = false;
+    });
+    document.getElementById("pause-btn").addEventListener("click", () => {
+        currentTimer = 'break';
+        startTime = Date.now();
+        paused = false;
+    });
+    document.getElementById("stop-btn").addEventListener("click", () => {
+        paused = true;
+    });
   </script>
 
   <script>
 
+      /*
     // Set up the timer variables
     let workTimer;
     let breakTimer;
@@ -261,11 +325,14 @@
     document.getElementById("pause-btn").addEventListener("click", startBreakTimer);
     document.getElementById("stop-btn").addEventListener("click", stopAllTimers);
 
+*/
   </script>
 
   <script>
+      /*
     const WORK_TIME = 25 * 60; // 25 minutes in seconds
     const BREAK_TIME = 5 * 60; // 5 minutes in seconds
+
 
     const parameters = {
       work: 25,
@@ -301,10 +368,6 @@
     const stopBtn = document.getElementById('stop-btn');
     const timerDisplay = document.getElementById('timer-label-value');
 
-
-    playBtn.addEventListener('click', startTimer.bind(null, WORK_TIME));
-    pauseBtn.addEventListener('click', startTimer.bind(null, BREAK_TIME));
-    stopBtn.addEventListener('click', stopTimer);
 
     function startTimer(duration) {
       timeLeft = 60;
@@ -357,15 +420,17 @@
       document.getElementById("timer-label-value").innerHTML = `${formattedMinutes}:${formattedSeconds}`;
     }
 
+*/
   </script>
 
   <script>
+      /*
     function updateTimerDisplay() {
-      console.log('updating timer display');
-      const minutes = Math.floor(timeLeft / 60);
-      const seconds = timeLeft % 60;
+      const minutes = Math.floor(remainingTime / 60);
+      const seconds = remainingTime % 60;
       timerDisplay.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
     }
+    */
   </script>
 
 </body>
