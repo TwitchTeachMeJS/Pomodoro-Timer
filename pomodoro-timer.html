@@ -157,7 +157,7 @@
       <button id="stop-btn"></button>
     </div>
     <div class="timer-label">
-      <div id="timer-label-value" work-time="25" break-time="1" ></div>
+      <div id="timer-label-value" work-time="25" break-time="5"></div>
     </div>
   </div>
 
@@ -165,35 +165,35 @@
     // I tried to keep as much of the real code as possible
     let paused = false;
     let remainingTime = 0;
-    
+
     const availableTimers = ['work', 'break'];
     let currentTimer = 'work';
 
 
     function mapRange(value, start_start, start_end, end_start, end_end) {
-        return end_start + ((end_end - end_start) / (start_end - start_start)) * (value - start_start);
+      return end_start + ((end_end - end_start) / (start_end - start_start)) * (value - start_start);
     }
     let startTime = Date.now();
     function updateTime() {
-        if (paused) return;
-        const now = Date.now();
-        const diff = now - startTime;
-        let params = getParameters();
-        
-        // Deterime which time are we looking at
-        let timeRemaining = 0;
-        if (currentTimer == 'work') {
-            timeRemaining = params.work * 60 - diff * 0.001;
-            if (timeRemaining < 0) timeRemaining = 0;
-            else timeRemaining += 1;
-        } else if (currentTimer == 'break') {
-            timeRemaining = params.break * 60 - diff * 0.001;
-            if (timeRemaining < 0) timeRemaining = 0;
-            else timeRemaining += 1;
-        }
+      if (paused) return;
+      const now = Date.now();
+      const diff = now - startTime;
+      let params = getParameters();
 
-        // The +1 is to just display the "25:00" so it doesn't immediately start at 24:59
-        remainingTime = parseInt(timeRemaining);
+      // Deterime which time are we looking at
+      let timeRemaining = 0;
+      if (currentTimer == 'work') {
+        timeRemaining = params.work * 60 - diff * 0.001;
+        if (timeRemaining < 0) timeRemaining = 0;
+        else timeRemaining += 1;
+      } else if (currentTimer == 'break') {
+        timeRemaining = params.break * 60 - diff * 0.001;
+        if (timeRemaining < 0) timeRemaining = 0;
+        else timeRemaining += 1;
+      }
+
+      // The +1 is to just display the "25:00" so it doesn't immediately start at 24:59
+      remainingTime = parseInt(timeRemaining);
     }
 
     // Add leading 0's
@@ -204,14 +204,14 @@
     // Calculate the path remaining
     function calculateRemainingPathDashArray(parameters) {
 
-        let timerFull = getParameters()[currentTimer]
-        timerFull *= 60;
-        console.log(remainingTime);
+      let timerFull = getParameters()[currentTimer]
+      timerFull *= 60;
+      console.log(remainingTime);
 
-        let perc = mapRange(remainingTime, timerFull, 0, 0, 283);
+      let perc = mapRange(remainingTime, timerFull, 0, 0, 283);
 
-        console.log(perc); 
-        return `${perc} 283`;
+      console.log(perc);
+      return `${perc} 283`;
     }
 
     // We will not be using this considering it's trying to get from a global time
@@ -250,14 +250,14 @@
     }
 
     function getParameters() {
-        const mainElement = document.getElementById('timer-label-value');
+      const mainElement = document.getElementById('timer-label-value');
 
-        const workMinutes = mainElement.getAttribute('work-time') == null ? 25 : parseFloat(mainElement.getAttribute('work-time'));
-        const breakMinutes = mainElement.getAttribute('work-time') == null ? 25 : parseFloat(mainElement.getAttribute('break-time'));
-        return {
-            break: breakMinutes,
-            work: workMinutes,
-        }
+      const workMinutes = mainElement.getAttribute('work-time') == null ? 25 : parseFloat(mainElement.getAttribute('work-time'));
+      const breakMinutes = mainElement.getAttribute('work-time') == null ? 25 : parseFloat(mainElement.getAttribute('break-time'));
+      return {
+        break: breakMinutes,
+        work: workMinutes,
+      }
     }
 
     setInterval(function () {
@@ -275,162 +275,162 @@
     }, 200);
 
     document.getElementById("play-btn").addEventListener("click", () => {
-        currentTimer = 'work';
-        startTime = Date.now();
-        paused = false;
+      currentTimer = 'work';
+      startTime = Date.now();
+      paused = false;
     });
     document.getElementById("pause-btn").addEventListener("click", () => {
-        currentTimer = 'break';
-        startTime = Date.now();
-        paused = false;
+      currentTimer = 'break';
+      startTime = Date.now();
+      paused = false;
     });
     document.getElementById("stop-btn").addEventListener("click", () => {
-        paused = true;
+      paused = true;
     });
   </script>
 
   <script>
 
-      /*
-    // Set up the timer variables
-    let workTimer;
-    let breakTimer;
+    /*
+  // Set up the timer variables
+  let workTimer;
+  let breakTimer;
 
 
-    // Function to start the work timer
-    function startWorkTimer() {
-      workTimer = setInterval(() => {
-        // Do work timer logic here
-        console.log("Work timer started.");
-      }, 1000);
-    }
+  // Function to start the work timer
+  function startWorkTimer() {
+    workTimer = setInterval(() => {
+      // Do work timer logic here
+      console.log("Work timer started.");
+    }, 1000);
+  }
 
-    // Function to start the break timer
-    function startBreakTimer() {
-      breakTimer = setInterval(() => {
-        // Do break timer logic here
-        console.log("Break timer started.");
-      }, 1000);
-    }
+  // Function to start the break timer
+  function startBreakTimer() {
+    breakTimer = setInterval(() => {
+      // Do break timer logic here
+      console.log("Break timer started.");
+    }, 1000);
+  }
 
-    // Function to stop all timers
-    function stopAllTimers() {
-      clearInterval(workTimer);
-      clearInterval(breakTimer);
-      console.log("All timers stopped.");
-    }
+  // Function to stop all timers
+  function stopAllTimers() {
+    clearInterval(workTimer);
+    clearInterval(breakTimer);
+    console.log("All timers stopped.");
+  }
 
-    // Attach event listeners to buttons
-    document.getElementById("play-btn").addEventListener("click", startWorkTimer);
-    document.getElementById("pause-btn").addEventListener("click", startBreakTimer);
-    document.getElementById("stop-btn").addEventListener("click", stopAllTimers);
+  // Attach event listeners to buttons
+  document.getElementById("play-btn").addEventListener("click", startWorkTimer);
+  document.getElementById("pause-btn").addEventListener("click", startBreakTimer);
+  document.getElementById("stop-btn").addEventListener("click", stopAllTimers);
 
 */
   </script>
 
   <script>
-      /*
-    const WORK_TIME = 25 * 60; // 25 minutes in seconds
-    const BREAK_TIME = 5 * 60; // 5 minutes in seconds
+    /*
+  const WORK_TIME = 25 * 60; // 25 minutes in seconds
+  const BREAK_TIME = 5 * 60; // 5 minutes in seconds
 
 
-    const parameters = {
-      work: 25,
-      break: 5
-    };
+  const parameters = {
+    work: 25,
+    break: 5
+  };
 
-    let remainingSeconds = parameters.work * 60;
+  let remainingSeconds = parameters.work * 60;
 
-    function updateTimer() {
-      const remainingMinutes = Math.floor(remainingSeconds / 60);
-      const remainingSecondsDisplay = remainingSeconds % 60;
-      updateTimerLabel(remainingMinutes, remainingSecondsDisplay);
-      const remainingPathDashArray = calculateRemainingPathDashArray(parameters, remainingSeconds);
-      document.getElementById("timer-circle-outer").setAttribute("stroke-dasharray", remainingPathDashArray);
-      if (remainingSeconds === 0) {
-        clearInterval(timerInterval);
+  function updateTimer() {
+    const remainingMinutes = Math.floor(remainingSeconds / 60);
+    const remainingSecondsDisplay = remainingSeconds % 60;
+    updateTimerLabel(remainingMinutes, remainingSecondsDisplay);
+    const remainingPathDashArray = calculateRemainingPathDashArray(parameters, remainingSeconds);
+    document.getElementById("timer-circle-outer").setAttribute("stroke-dasharray", remainingPathDashArray);
+    if (remainingSeconds === 0) {
+      clearInterval(timerInterval);
+    } else {
+      remainingSeconds -= 1;
+    }
+  }
+
+  const timerInterval = setInterval(updateTimer, 1000);
+
+  let timerIntervalId;
+  let remainingTime = WORK_TIME;
+
+  let timeLeft = 60;
+
+  const timerCircleOuter = document.getElementById('timer-circle-outer');
+  const timerLabel = document.getElementById('timer-label');
+  const playBtn = document.getElementById('play-btn');
+  const pauseBtn = document.getElementById('pause-btn');
+  const stopBtn = document.getElementById('stop-btn');
+  const timerDisplay = document.getElementById('timer-label-value');
+
+
+  function startTimer(duration) {
+    timeLeft = 60;
+    clearInterval(timerIntervalId);
+    remainingTime = duration;
+    updateTimerDisplay();
+    timerIntervalId = setInterval(updateTimer, 1000);
+    playBtn.disabled = true;
+    pauseBtn.disabled = false;
+    stopBtn.disabled = false;
+  }
+
+  function stopTimer() {
+    clearInterval(timerIntervalId);
+    remainingTime = WORK_TIME;
+    updateTimerDisplay();
+    playBtn.disabled = false;
+    pauseBtn.disabled = true;
+    stopBtn.disabled = true;
+  }
+
+  function updateTimer() {
+    remainingTime--;
+    if (remainingTime <= 0) {
+      stopTimer();
+      if (timerIntervalId === undefined) {
+        // The timer was stopped, so we are on a break
+        startTimer(BREAK_TIME);
       } else {
-        remainingSeconds -= 1;
+        // The work timer completed
+        alert('Time is up!');
       }
     }
+    updateTimerDisplay();
+  }
 
-    const timerInterval = setInterval(updateTimer, 1000);
+  function updateTimerDisplay() {
+    const minutes = Math.floor(remainingTime / 60);
+    const seconds = remainingTime % 60;
+    const minutesStr = minutes.toString().padStart(2, '0');
+    const secondsStr = seconds.toString().padStart(2, '0');
+    timerLabel.textContent = `${minutesStr}:${secondsStr}`;
+    const progress = (remainingTime / (remainingTime === WORK_TIME ? WORK_TIME : BREAK_TIME)) * 100;
+    timerCircleOuter.style.strokeDashoffset = (283 * progress) / 100;
+  }
 
-    let timerIntervalId;
-    let remainingTime = WORK_TIME;
-
-    let timeLeft = 60;
-
-    const timerCircleOuter = document.getElementById('timer-circle-outer');
-    const timerLabel = document.getElementById('timer-label');
-    const playBtn = document.getElementById('play-btn');
-    const pauseBtn = document.getElementById('pause-btn');
-    const stopBtn = document.getElementById('stop-btn');
-    const timerDisplay = document.getElementById('timer-label-value');
-
-
-    function startTimer(duration) {
-      timeLeft = 60;
-      clearInterval(timerIntervalId);
-      remainingTime = duration;
-      updateTimerDisplay();
-      timerIntervalId = setInterval(updateTimer, 1000);
-      playBtn.disabled = true;
-      pauseBtn.disabled = false;
-      stopBtn.disabled = false;
-    }
-
-    function stopTimer() {
-      clearInterval(timerIntervalId);
-      remainingTime = WORK_TIME;
-      updateTimerDisplay();
-      playBtn.disabled = false;
-      pauseBtn.disabled = true;
-      stopBtn.disabled = true;
-    }
-
-    function updateTimer() {
-      remainingTime--;
-      if (remainingTime <= 0) {
-        stopTimer();
-        if (timerIntervalId === undefined) {
-          // The timer was stopped, so we are on a break
-          startTimer(BREAK_TIME);
-        } else {
-          // The work timer completed
-          alert('Time is up!');
-        }
-      }
-      updateTimerDisplay();
-    }
-
-    function updateTimerDisplay() {
-      const minutes = Math.floor(remainingTime / 60);
-      const seconds = remainingTime % 60;
-      const minutesStr = minutes.toString().padStart(2, '0');
-      const secondsStr = seconds.toString().padStart(2, '0');
-      timerLabel.textContent = `${minutesStr}:${secondsStr}`;
-      const progress = (remainingTime / (remainingTime === WORK_TIME ? WORK_TIME : BREAK_TIME)) * 100;
-      timerCircleOuter.style.strokeDashoffset = (283 * progress) / 100;
-    }
-
-    function updateTimerLabel(minutes, seconds) {
-      const formattedMinutes = zeroPadding(minutes, 2);
-      const formattedSeconds = zeroPadding(seconds, 2);
-      document.getElementById("timer-label-value").innerHTML = `${formattedMinutes}:${formattedSeconds}`;
-    }
+  function updateTimerLabel(minutes, seconds) {
+    const formattedMinutes = zeroPadding(minutes, 2);
+    const formattedSeconds = zeroPadding(seconds, 2);
+    document.getElementById("timer-label-value").innerHTML = `${formattedMinutes}:${formattedSeconds}`;
+  }
 
 */
   </script>
 
   <script>
-      /*
-    function updateTimerDisplay() {
-      const minutes = Math.floor(remainingTime / 60);
-      const seconds = remainingTime % 60;
-      timerDisplay.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-    }
-    */
+    /*
+  function updateTimerDisplay() {
+    const minutes = Math.floor(remainingTime / 60);
+    const seconds = remainingTime % 60;
+    timerDisplay.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+  }
+  */
   </script>
 
 </body>
